@@ -13,6 +13,11 @@ colorama.init(autoreset=True)
 #TODO analysis of what the text is (hex, binary, etc), but also include arguments to automatically do it
 #TODO create a class about just passive statistics
 #TODO be able to list what it decodes
+#TODO fix unprintable characters
+#TODO fix rot key
+#TODO shorten rot code
+#TODO hexadecimal functionality
+#TODO document my code
 
 def parse_command_line():
 	parser = argparse.ArgumentParser()
@@ -73,27 +78,35 @@ class Decode:
 		bases = base64.b64decode(self)
 		return Decode.decode(bases)
 
-	def rot(self, key):
+	def rot(self):
 		LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 		letters = 'abcdefghijklmnopqrstuvwxyz'
+		numbers = '0123456789'
 		translated = ''
-		for symbol in self:
-			if symbol in LETTERS:
-				num = LETTERS.find(symbol)
-				num = num - key
-				if num < 0:
-					num = num + len(LETTERS)
-				translated = translated + LETTERS[num]
-			elif symbol in letters:
-				num = letters.find(symbol)
-				num = num - key
-				if num < 0:
-					num = num + len(letters)
-				translated = translated + letters[num]
-			else:
-				translated = translated + symbol
-		return translated
-
+		global rot_min, rot_max
+		for i in range(rot_min, rot_max):
+			for symbol in self:
+				if symbol in LETTERS:
+					num = LETTERS.find(symbol)
+					num = num - i
+					if num < 0:
+						num = num + len(LETTERS)
+					translated = translated + LETTERS[num]
+				elif symbol in letters:
+					num = letters.find(symbol)
+					num = num - i
+					if num < 0:
+						num = num + len(letters)
+					translated = translated + letters[num]
+				elif symbol in numbers:
+					num = numbers.find(symbol)
+					num = num - i
+					if num < 0:
+						num = num + len(numbers)
+				else:
+					translated = translated + symbol
+			return translated
+	
 	def morse(self):
 		self += ' '
 		decipher = ''
@@ -116,49 +129,24 @@ class Manipulate:
 	def reverse(self):
 		return self[::-1]
 
-def identify(cipher):
-        candidates = []
-        base64 = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
-        binary = re.compile("^[01\W_]+$")
-        rot = re.compile("^[A-Za-z0-9\W]+$")
-        hex = re.compile("^[A-Fa-f0-9]+$")
-        morse = re.compile("^[.\- /]+$")
-
-        if cipher.isascii():
-                info("Ciphertext is ascii")
-        if cipher.isdigit():
-                info("Ciphertext is a number")
-        if cipher.isalpha():
-                info("Ciphertext is all letters")
-        if cipher.isupper():
-                info("Ciphertext is uppercase")
-        if cipher.islower():
-                info("Ciphertext is lowercase")
-
-        if binary.match(cipher):
-                info("Ciphertext may be binary")
-                plaintext = Decode.binary(cipher)
-                answer("Binary decode (Ø means unprintable): ", plaintext)
-                candidates.append(plaintext)
-        if base64.match(cipher):
-                info("Ciphertext may be base64")
-                plaintext = Decode.base64(cipher)
-                answer("Base64 decode (Ø means unprintable): ", plaintext)
-                candidates.append(plaintext)
-        if rot.match(cipher):
-                info("Ciphertext may be ROT")
-                for i in range(rot_min, rot_max):
-                        plaintext = Decode.rot(cipher, i).rstrip()
-                        answer("ROT%d decode: " % i, plaintext)
-                        candidates.append(plaintext)
-        if morse.match(cipher):
-                info("Ciphertext may be morse")
-                plaintext = Decode.morse(cipher.replace('/', ''))
-                answer("Morse decode: ", plaintext)
-                candidates.append(plaintext)
-        if hex.match(cipher):
-                info("Ciphertext may be hex")
-        return candidates
+class Identify: #class that automates identification of ciphertext (faster than brute forcing)
+	def regex(self, encoder): #establishes what each possible encoded ciphertext looks like using regex
+		base64 = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
+		binary = re.compile("^[01\W_]+$")
+		rot = re.compile("^[A-Za-z0-9\W]+$")
+		hexadecimal = re.compile("^[A-Fa-f0-9]+$")
+		morse = re.compile("^[.\- /]+$")
+		return eval(encoder)
+	def __init__(self, cipher):
+		encodings = ["base64", "binary", "rot", "hexadecimal", "morse"] #lists each function name (REDO IN TODO)
+		candidates = [] #prepares candidates for multiple iterations
+		for encoder in encodings: #for each string found in the encoding list
+			if self.regex(encoder).match(cipher): #if the regex of the encoder matches the ciphertext
+				info("Ciphertext may be {}".format(encoder))
+				decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
+				answer(encoder, decoded)
+				candidates.append(decoded) #add the possible plaintext to the candidate list
+		return candidates #returns possible candidates of plaintext from decoding
 
 class Check:
 	def string(self, pt):
@@ -249,7 +237,7 @@ if __name__ == '__main__':
 	for i in range(1, 1 + iteration):
 		print("Iteration %d:" % i)
 		for j in range(len(cipher)):
-			candidates = identify(cipher[j])
+			candidates = Identify(cipher[j])
 			print("Candidates %s, cipher %s" % (candidates, cipher))
 			for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
 				if Check(candidates[k]):
