@@ -11,7 +11,8 @@ from colorama import Fore, Back, Style
 colorama.init(autoreset=True)
 
 #TODO analysis of what the text is (hex, binary, etc), but also include arguments to automatically do it
-#TODO things to look for (program will stop if code matches user defined key ('htb{' or english.txt)
+#TODO create a class about just passive statistics
+#TODO be able to list what it decodes
 
 def parse_command_line():
 	parser = argparse.ArgumentParser()
@@ -22,9 +23,10 @@ def parse_command_line():
 	parser.add_argument("-s", "--search", help="Program will know it has successfully decoded if output contains user defined string")
 	parser.add_argument("-d", "--dictionary", help="Program will know it has successfully decoded if output contains English words")
 	parser.add_argument("-n", "--number", help="The number of English words before the program is flagged as correct", const=3, type=int, nargs='?', default=3)
-	parser.add_argument("-i", "--iteration", help="The number of iterations the program will do", const=3, type=int, nargs='?', default=3)
+	parser.add_argument("-i", "--iteration", help="The number of iterations the program will do", const=3, type=int, nargs='?', default=1)
 	parser.add_argument("-r", "--rot", help="Run all ROT's (1-25) instead of just ROT13", action="store_true")
-
+	parser.add_argument("-u", "--userdefined", help="User defines what to decode (type '--listuser' to list arguments)", type=str, nargs='?')
+	parser.add_argument("--listuser", help="Lists user defined arguments", action="store_true")
 	return parser
 
 MORSE_CODE_DICT = { 'A':'.-', 'B':'-...', 
@@ -41,10 +43,11 @@ MORSE_CODE_DICT = { 'A':'.-', 'B':'-...',
                     '7':'--...', '8':'---..', '9':'----.', 
                     '0':'-----', ', ':'--..--', '.':'.-.-.-', 
                     '?':'..--..', '!':'-.-.--', '/':'-..-.', 
-                    '-':'-....-', '(':'-.--.', ')':'-.--.-'} 
+                    '-':'-....-', '(':'-.--.', ')':'-.--.-',
+                    '=':'-...-'}
 
 def answer(a, b):
-	print(Fore.GREEN + a + Style.BRIGHT + b)
+	print(Fore.GREEN + "{} decode: ".format(a) + Style.BRIGHT + "{}".format(b))
 def info(a):
 	print(Fore.BLUE + a)
 
@@ -114,48 +117,48 @@ class Manipulate:
 		return self[::-1]
 
 def identify(cipher):
-	candidates = []
-	base64 = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
-	binary = re.compile("^[01\W_]+$")
-	rot = re.compile("^[A-Za-z0-9\W]+$")
-	hex = re.compile("^[A-Fa-f0-9]+$")
-	morse = re.compile("^[.\- /]+$")
+        candidates = []
+        base64 = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
+        binary = re.compile("^[01\W_]+$")
+        rot = re.compile("^[A-Za-z0-9\W]+$")
+        hex = re.compile("^[A-Fa-f0-9]+$")
+        morse = re.compile("^[.\- /]+$")
 
-	if cipher.isascii():
-		info("Ciphertext is ascii")
-	if cipher.isdigit():
-		info("Ciphertext is a number")
-	if cipher.isalpha():
-		info("Ciphertext is all letters")
-	if cipher.isupper():
-		info("Ciphertext is uppercase")
-	if cipher.islower():
-		info("Ciphertext is lowercase")
+        if cipher.isascii():
+                info("Ciphertext is ascii")
+        if cipher.isdigit():
+                info("Ciphertext is a number")
+        if cipher.isalpha():
+                info("Ciphertext is all letters")
+        if cipher.isupper():
+                info("Ciphertext is uppercase")
+        if cipher.islower():
+                info("Ciphertext is lowercase")
 
-	if binary.match(cipher):
-		info("Ciphertext may be binary")
-		plaintext = Decode.binary(cipher)
-		answer("Binary decode (Ø means unprintable): ", plaintext)
-		candidates.append(plaintext)
-	if base64.match(cipher):
-		info("Ciphertext may be base64")
-		plaintext = Decode.base64(cipher)
-		answer("Base64 decode (Ø means unprintable): ", plaintext)
-		candidates.append(plaintext)
-	if rot.match(cipher):
-		info("Ciphertext may be ROT")
-		for i in range(rot_min, rot_max):
-			plaintext = Decode.rot(cipher, i).rstrip()
-			answer("ROT%d decode: " % i, plaintext)
-			candidates.append(plaintext)
-	if morse.match(cipher):
-		info("Ciphertext may be morse")
-		plaintext = Decode.morse(cipher.replace('/', ''))
-		answer("Morse decode: ", plaintext)
-		candidates.append(plaintext)
-	if hex.match(cipher):
-		info("Ciphertext may be hex")
-	return candidates
+        if binary.match(cipher):
+                info("Ciphertext may be binary")
+                plaintext = Decode.binary(cipher)
+                answer("Binary decode (Ø means unprintable): ", plaintext)
+                candidates.append(plaintext)
+        if base64.match(cipher):
+                info("Ciphertext may be base64")
+                plaintext = Decode.base64(cipher)
+                answer("Base64 decode (Ø means unprintable): ", plaintext)
+                candidates.append(plaintext)
+        if rot.match(cipher):
+                info("Ciphertext may be ROT")
+                for i in range(rot_min, rot_max):
+                        plaintext = Decode.rot(cipher, i).rstrip()
+                        answer("ROT%d decode: " % i, plaintext)
+                        candidates.append(plaintext)
+        if morse.match(cipher):
+                info("Ciphertext may be morse")
+                plaintext = Decode.morse(cipher.replace('/', ''))
+                answer("Morse decode: ", plaintext)
+                candidates.append(plaintext)
+        if hex.match(cipher):
+                info("Ciphertext may be hex")
+        return candidates
 
 class Check:
 	def string(self, pt):
@@ -193,19 +196,52 @@ if __name__ == '__main__':
 		cipher.append(args.ciphertext)
 	if args.file != None:
 		with open(args.file, 'r') as file:
-			cipher = file.read().replace('\n', '')
+			cipher = []
+			cipher.append(file.read().replace('\n', ''))
 	if args.dictionary != None:
 		with open(args.dictionary, 'r') as file:
 			dictionary = file.read()
 			dictionary = dictionary.split('\n')
 	if args.search != None:
 		search = args.search
+	if args.listuser:
+		print('''
+		base64  =   6
+		morse   =   m
+		binary  =   b
+		rot     =   r
+
+		Example: '6b' decodes base64 and decodes binary
+		''')
+		exit(0)
 
 	rot_min = 13
 	rot_max = 14
 	if args.rot:
 		rot_min = 1
 		rot_max = 26
+
+	if args.userdefined != None:
+		defined = list(args.userdefined)
+		code = cipher[0]
+		for i in defined:
+			try:
+				if i == '6':
+					code = Decode.base64(code)
+					answer("Base64 decode (Ø means unprintable): ", code)
+				elif i.lower() == 'm':
+					code = Decode.morse(code)
+					answer("Morse decode (Ø means unprintable): ", code)
+				elif i.lower() == 'b':
+					code = Decode.binary(code) 
+					answer("Binary decode (Ø means unprintable): ", code)
+				elif i.lower() == 'r':
+					for j in range(rot_min, rot_max):
+						code = Decode.rot(code, j).rstrip()
+						answer("Rot decode (Ø means unprintable): ", code)
+			except:
+				print("{} did not work".format(i))
+		exit(0)
 
 	num = args.number
 	iteration = args.iteration
