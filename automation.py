@@ -16,7 +16,6 @@ colorama.init(autoreset=True)
 #TODO fix unprintable characters
 #TODO fix rot key
 #TODO shorten rot code
-#TODO hexadecimal functionality
 #TODO document my code
 
 def parse_command_line():
@@ -106,7 +105,19 @@ class Decode:
 				else:
 					translated = translated + symbol
 			return translated
-	
+
+	def hexadecimal(self):
+		chars = []
+		if ' ' in self:
+			for i in self.split(" "):
+				translated = bytearray.fromhex(i).decode()
+		if '0x' in self:
+			for i in self.split("0x"):
+				translated = bytearray.fromhex(i).decode()
+		else:
+			translated = bytearray.fromhex(self).decode()
+		return translated
+
 	def morse(self):
 		self += ' '
 		decipher = ''
@@ -134,7 +145,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
 		base64 = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 		binary = re.compile("^[01\W_]+$")
 		rot = re.compile("^[A-Za-z0-9\W]+$")
-		hexadecimal = re.compile("^[A-Fa-f0-9]+$")
+		hexadecimal = re.compile("^[0]?[xX]?[A-Fa-f0-9 ]+$")
 		morse = re.compile("^[.\- /]+$")
 		return eval(encoder)
 	def __init__(self, cipher):
