@@ -63,7 +63,7 @@ class Decode:
 			plaintext = "ϴ"
 			return plaintext
 	def binary(self):
-		clean = re.sub('[\W_]', '', self) # gets rid of delimiters
+		clean = re.sub(r'[\W_]', '', self) # gets rid of delimiters
 		split = [clean[i:i+8] for i in range(0, len(clean), 8)]	# splits string into groups of 8
 		byte_list = []
 		for i in range(len(split)): # convert each binary string to its corresponding byte
@@ -128,11 +128,11 @@ class Manipulate:
 
 class Identify: #class that automates identification of ciphertext (faster than brute forcing)
 	def regex(self, encoder): #establishes what each possible encoded ciphertext looks like using regex
-		base64 = re.compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
-		binary = re.compile("^[01\W_]+$")
-		rot = re.compile("^[A-Za-z0-9\W]+$")
-		hexadecimal = re.compile("^[0]?[xX]?[A-Fa-f0-9 ]+$")
-		morse = re.compile("^[.\- /]+$")
+		base64 = re.compile(r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
+		binary = re.compile(r"^[01\W_]+$")
+		rot = re.compile(r"^[A-Za-z0-9\W]+$")
+		hexadecimal = re.compile(r"^[0]?[xX]?[A-Fa-f0-9 ]+$")
+		morse = re.compile(r"^[.\- /]+$")
 		return eval(encoder)
 	def __init__(self, cipher):
 		encodings = ["base64", "binary", "rot", "hexadecimal", "morse"] #lists each function name (REDO IN TODO)
