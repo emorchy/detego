@@ -15,7 +15,6 @@ colorama.init(autoreset=True)
 #TODO be able to list what it decodes
 #TODO fix unprintable characters
 #TODO fix rot key
-#TODO shorten rot code
 #TODO document my code
 
 def parse_command_line():
@@ -72,40 +71,28 @@ class Decode:
 			plaintext = Decode.decode(binary)
 			byte_list.append(plaintext)
 		return ''.join(byte_list)
-
 	def base64(self):
 		bases = base64.b64decode(self)
 		return Decode.decode(bases)
-
-	def rot(self):
+	def rot(self, rot_min, rot_max):
 		LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 		letters = 'abcdefghijklmnopqrstuvwxyz'
 		numbers = '0123456789'
-		translated = ''
-		global rot_min, rot_max
+		translated = []
 		for i in range(rot_min, rot_max):
+			char = []
 			for symbol in self:
-				if symbol in LETTERS:
-					num = LETTERS.find(symbol)
-					num = num - i
-					if num < 0:
-						num = num + len(LETTERS)
-					translated = translated + LETTERS[num]
-				elif symbol in letters:
-					num = letters.find(symbol)
-					num = num - i
-					if num < 0:
-						num = num + len(letters)
-					translated = translated + letters[num]
-				elif symbol in numbers:
-					num = numbers.find(symbol)
-					num = num - i
-					if num < 0:
-						num = num + len(numbers)
+				if symbol.isupper(): charset = LETTERS   # defines which charset to shift
+				elif symbol.islower(): charset = letters 
+				elif symbol.isdigit(): charset = numbers 
 				else:
-					translated = translated + symbol
-			return translated
-
+					char.append(symbol) # char will not be shifted if it doesn't belong to any charset
+					continue
+				num = charset.find(symbol) # finds index number of char in charset
+				num = (num + i) % len(charset) # finds the shifted char in charset while staying in range
+				char.append(charset[num]) # add to char list
+			translated.append("".join(char)) # combine char list into one string
+		return translated # return every string from every rot iterated
 	def hexadecimal(self):
 		chars = []
 		if ' ' in self:
@@ -117,7 +104,6 @@ class Decode:
 		else:
 			translated = bytearray.fromhex(self).decode()
 		return translated
-
 	def morse(self):
 		self += ' '
 		decipher = ''
@@ -154,9 +140,19 @@ class Identify: #class that automates identification of ciphertext (faster than 
 		for encoder in encodings: #for each string found in the encoding list
 			if self.regex(encoder).match(cipher): #if the regex of the encoder matches the ciphertext
 				info("Ciphertext may be {}".format(encoder))
-				decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
-				answer(encoder, decoded)
-				candidates.append(decoded) #add the possible plaintext to the candidate list
+				try:
+					if encoder == "rot": # temporary solution
+						global rot_min, rot_max
+						decoded = Decode.rot(cipher, rot_min, rot_max) #pass along the ciphertext and the encoding type to the decoder
+						for i in range(len(decoded)):
+							answer(encoder + str(i+1), decoded[i])
+						candidates.extend(decoded)
+					else:
+						decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
+						answer(encoder, decoded)
+						candidates.append(decoded) #add the possible plaintext to the candidate list
+				except Exception as e:
+					print("Could not decode using {}, Error: {}".format(encoder, e))
 		return candidates #returns possible candidates of plaintext from decoding
 
 class Check:
