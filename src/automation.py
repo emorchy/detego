@@ -33,21 +33,21 @@ def parse_command_line():
 	return parser
 
 MORSE_CODE_DICT = { 'A':'.-', 'B':'-...', 
-                    'C':'-.-.', 'D':'-..', 'E':'.', 
-                    'F':'..-.', 'G':'--.', 'H':'....', 
-                    'I':'..', 'J':'.---', 'K':'-.-', 
-                    'L':'.-..', 'M':'--', 'N':'-.', 
-                    'O':'---', 'P':'.--.', 'Q':'--.-', 
-                    'R':'.-.', 'S':'...', 'T':'-', 
-                    'U':'..-', 'V':'...-', 'W':'.--', 
-                    'X':'-..-', 'Y':'-.--', 'Z':'--..', 
-                    '1':'.----', '2':'..---', '3':'...--', 
-                    '4':'....-', '5':'.....', '6':'-....', 
-                    '7':'--...', '8':'---..', '9':'----.', 
-                    '0':'-----', ', ':'--..--', '.':'.-.-.-', 
-                    '?':'..--..', '!':'-.-.--', '/':'-..-.', 
-                    '-':'-....-', '(':'-.--.', ')':'-.--.-',
-                    '=':'-...-'}
+		    'C':'-.-.', 'D':'-..', 'E':'.', 
+		    'F':'..-.', 'G':'--.', 'H':'....', 
+		    'I':'..', 'J':'.---', 'K':'-.-', 
+		    'L':'.-..', 'M':'--', 'N':'-.', 
+		    'O':'---', 'P':'.--.', 'Q':'--.-', 
+		    'R':'.-.', 'S':'...', 'T':'-', 
+		    'U':'..-', 'V':'...-', 'W':'.--', 
+		    'X':'-..-', 'Y':'-.--', 'Z':'--..', 
+		    '1':'.----', '2':'..---', '3':'...--', 
+		    '4':'....-', '5':'.....', '6':'-....', 
+		    '7':'--...', '8':'---..', '9':'----.', 
+		    '0':'-----', ', ':'--..--', '.':'.-.-.-', 
+		    '?':'..--..', '!':'-.-.--', '/':'-..-.', 
+		    '-':'-....-', '(':'-.--.', ')':'-.--.-',
+		    '=':'-...-'}
 
 def answer(a, b):
 	print(Fore.GREEN + "{} decode: ".format(a) + Style.BRIGHT + "{}".format(b))
@@ -82,7 +82,7 @@ class Decode:
 		for i in range(rot_min, rot_max):
 			char = []
 			for symbol in self:
-				if symbol.isupper(): charset = LETTERS   # defines which charset to shift
+				if symbol.isupper(): charset = LETTERS	 # defines which charset to shift
 				elif symbol.islower(): charset = letters 
 				elif symbol.isdigit(): charset = numbers 
 				else:
@@ -105,21 +105,21 @@ class Decode:
 			translated = bytearray.fromhex(self).decode()
 		return translated
 	def morse(self):
-		self += ' '
-		decipher = ''
-		mycitext = ''
-		for myletter in self:
-			# checks for space
-			if (myletter != ' '):
-				i = 0
-				mycitext += myletter
+		code = self.strip()
+		decipher, pending = '','' # declare two empty string variables
+		space = re.compile(r"[ \t]") # tab or space
+		word = re.compile(r"[/\\]") # forward of backward slash
+		for ditdah in code:
+			if space.match(ditdah):
+				decipher += list(MORSE_CODE_DICT.keys())[list(MORSE_CODE_DICT.values()).index(pending)] # decode in pending string
+				pending = '' # reset pending string
+			elif word.match(ditdah):
+				decipher += list(MORSE_CODE_DICT.keys())[list(MORSE_CODE_DICT.values()).index(pending)]
+				pending = ''
+				decipher += ' ' # because / or \ represents a new word, so adds space
 			else:
-				i += 1
-				if i == 2 :
-					decipher += ' '
-				else:
-					decipher += list(MORSE_CODE_DICT.keys())[list(MORSE_CODE_DICT.values()).index(mycitext)]
-					mycitext = ''
+				pending += ditdah # add '.' or '_' to pending string, decoded and added to decipher after delimiter
+		decipher += list(MORSE_CODE_DICT.keys())[list(MORSE_CODE_DICT.values()).index(pending)] # required because code ends without delimiter
 		return decipher
 
 class Manipulate:
@@ -132,7 +132,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
 		binary = re.compile(r"^[01\W_]+$")
 		rot = re.compile(r"^[A-Za-z0-9\W]+$")
 		hexadecimal = re.compile(r"^[0]?[xX]?[A-Fa-f0-9 ]+$")
-		morse = re.compile(r"^[.\- /]+$")
+		morse = re.compile(r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$")
 		return eval(encoder)
 	def __init__(self, cipher):
 		encodings = ["base64", "binary", "rot", "hexadecimal", "morse"] #lists each function name (REDO IN TODO)
@@ -201,10 +201,10 @@ if __name__ == '__main__':
 		search = args.search
 	if args.listuser:
 		print('''
-		base64  =   6
-		morse   =   m
-		binary  =   b
-		rot     =   r
+		base64	=   6
+		morse	=   m
+		binary	=   b
+		rot	=   r
 
 		Example: '6b' decodes base64 and decodes binary
 		''')
