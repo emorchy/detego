@@ -15,8 +15,9 @@ jobs:
         - python -m pip install -U pip # uses python instead of python3
       env: PATH=/c/Python38:/c/Python38/Scripts:$PATH
 install:
-  - pip3 install pytest-cov
+  - pip3 install pytest
   - pip3 install -r requirements.txt
+  - pip3 install -e .
 script:
-  - pytest-cov
+  - pytest
 after_success: codecov
