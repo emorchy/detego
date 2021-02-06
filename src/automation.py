@@ -127,18 +127,18 @@ class Manipulate:
 		return self[::-1]
 
 class Identify: #class that automates identification of ciphertext (faster than brute forcing)
-	def regex(self, encoder): #establishes what each possible encoded ciphertext looks like using regex
+	def regex(encoder): #establishes what each possible encoded ciphertext looks like using regex
 		base64 = re.compile(r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 		binary = re.compile(r"^[01\W_]+$")
 		rot = re.compile(r"^[A-Za-z0-9\W]+$")
 		hexadecimal = re.compile(r"^[0]?[xX]?[A-Fa-f0-9 ]+$")
 		morse = re.compile(r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$")
 		return eval(encoder)
-	def __init__(self, cipher):
+	def main(cipher):
 		encodings = ["base64", "binary", "rot", "hexadecimal", "morse"] #lists each function name (REDO IN TODO)
 		candidates = [] #prepares candidates for multiple iterations
 		for encoder in encodings: #for each string found in the encoding list
-			if self.regex(encoder).match(cipher): #if the regex of the encoder matches the ciphertext
+			if Identify.regex(encoder).match(cipher): #if the regex of the encoder matches the ciphertext
 				info("Ciphertext may be {}".format(encoder))
 				try:
 					if encoder == "rot": # temporary solution
@@ -244,7 +244,7 @@ if __name__ == '__main__':
 	for i in range(1, 1 + iteration):
 		print("Iteration %d:" % i)
 		for j in range(len(cipher)):
-			candidates = Identify(cipher[j])
+			candidates = Identify.main(cipher[j])
 			print("Candidates %s, cipher %s" % (candidates, cipher))
 			for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
 				if Check(candidates[k]):
