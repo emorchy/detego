@@ -10,12 +10,6 @@ import colorama
 from colorama import Fore, Back, Style
 colorama.init(autoreset=True)
 
-#TODO analysis of what the text is (hex, binary, etc), but also include arguments to automatically do it
-#TODO create a class about just passive statistics
-#TODO be able to list what it decodes
-#TODO fix unprintable characters
-#TODO document my code
-
 def parse_command_line():
 	parser = argparse.ArgumentParser()
 	group = parser.add_mutually_exclusive_group(required=True)
@@ -128,7 +122,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
 	def regex(encoder): #establishes what each possible encoded ciphertext looks like using regex
 		base64 = re.compile(r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 		binary = re.compile(r"^[01\W_]+$")
-		rot = re.compile(r"^[A-Za-z]+[0-9\W]*$")
+		rot = re.compile(r"^[A-Za-z0-9\W]+$")
 		hexadecimal = re.compile(r"^[0]?[xX]?[A-Fa-f0-9 ]+$")
 		morse = re.compile(r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$")
 		return eval(encoder)
@@ -252,3 +246,4 @@ if __name__ == '__main__':
 					print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % candidates[k])
 					exit(0)
 		cipher = candidates
+
