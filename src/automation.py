@@ -156,28 +156,31 @@ class Identify: #class that automates identification of ciphertext (faster than 
 		return candidates #returns possible candidates of plaintext from decoding
 
 class Check:
-	def string(self, pt):
-		if search in pt:
+	def check_string(self):
+		if self.string.lower() in self.plaintext:
 			return True
-	def dictionary(self, pt):
+	def check_dictionary(self):
 		count = 0
-		flag = re.split(' | ,| _| -| !| .| +| ', pt)
-		for line in dictionary:
-			for i in range(len(flag)):
-				if flag[i].lower() == line:
+		flag = re.split(' | ,| _| -| !| .| +| ', self.plaintext)
+		for line in self.dictionary:
+			for i in flag:
+				if i == line:
 					count += 1
-			if count >= num:
+			if count >= self.num:
 				return True
-	def __init__(self, plaintext):
-		self.plaintext = plaintext
+	def __init__(self, plaintext, string, dictionary, num):
+		self.plaintext = plaintext.lower()
+		self.string = string
+		self.dictionary = dictionary
+		self.num = num
 	def __bool__(self):
 		try:
-			if self.string(self.plaintext) == True:
+			if self.check_string() == True:
 				return True
 		except:
 			pass
 		try:
-			if self.dictionary(self.plaintext) == True:
+			if self.check_dictionary() == True:
 				return True
 		except:	
 			pass
@@ -247,7 +250,7 @@ if __name__ == '__main__':
 			candidates = Identify.main(cipher[j])
 			print("Candidates %s, cipher %s" % (candidates, cipher))
 			for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
-				if Check(candidates[k]):
+				if Check(candidates[k], string, dictionary, num):
 					print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % candidates[k])
 					exit(0)
 		cipher = candidates
