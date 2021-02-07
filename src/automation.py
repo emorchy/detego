@@ -22,7 +22,7 @@ def parse_command_line():
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument("ciphertext", help="ciphertext here", nargs='?')
 	group.add_argument("-f", "--file", help="Option cipherfile in place of ciphertext", nargs='?')
-	parser.add_argument("-v", "--verbose", help="Increase output verbosity", action="store_true")
+	parser.add_argument("-v", "--verbose", help="Increase output verbosity (incremental)", action='count', default=0)
 	parser.add_argument("-s", "--search", help="Program will know it has successfully decoded if output contains user defined string")
 	parser.add_argument("-d", "--dictionary", help="Program will know it has successfully decoded if output contains English words")
 	parser.add_argument("-n", "--number", help="The number of English words before the program is flagged as correct", const=3, type=int, nargs='?', default=3)
@@ -134,18 +134,20 @@ class Identify: #class that automates identification of ciphertext (faster than 
 		hexadecimal = re.compile(r"^[0]?[xX]?[A-Fa-f0-9 ]+$")
 		morse = re.compile(r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$")
 		return eval(encoder)
-	def main(cipher):
+	def main(cipher, verbose):
 		encodings = ["base64", "binary", "rot", "hexadecimal", "morse"] #lists each function name (REDO IN TODO)
 		candidates = [] #prepares candidates for multiple iterations
 		for encoder in encodings: #for each string found in the encoding list
 			if Identify.regex(encoder).match(cipher): #if the regex of the encoder matches the ciphertext
-				info("Ciphertext may be {}".format(encoder))
+				if verbose == 2:
+					info("Ciphertext may be {}".format(encoder))
 				try:
 					if encoder == "rot": # temporary solution
 						global rot_min, rot_max
 						decoded = Decode.rot(cipher, rot_min, rot_max) #pass along the ciphertext and the encoding type to the decoder
-						for i in range(len(decoded)):
-							answer(encoder + str(i+1), decoded[i])
+						if verbose >= 1:
+							for i in range(len(decoded)):
+								answer(encoder + str(i+1), decoded[i])
 						candidates.extend(decoded)
 					else:
 						decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
@@ -243,11 +245,16 @@ if __name__ == '__main__':
 
 	num = args.number
 	iteration = args.iteration
+	verbose = args.verbose
+
+        if dictionary == None and string == None and verbose == 0:
+                print("Increasing verbosity because no checks defined")
+                verbose = 1
 
 	for i in range(1, 1 + iteration):
 		print("Iteration %d:" % i)
 		for j in range(len(cipher)):
-			candidates = Identify.main(cipher[j])
+			candidates = Identify.main(cipher[j], verbose)
 			print("Candidates %s, cipher %s" % (candidates, cipher))
 			for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
 				if Check(candidates[k], string, dictionary, num):

@@ -25,7 +25,8 @@ def dic_file():
 def test_identify_decode_check(cipher, plain, dictionary, search):
 	#for i in range(1,3): # runs three iterations
 	#print("Iteration %d:" % i)
-	candidates = Identify.main(cipher)
+	verbose = 2
+	candidates = Identify.main(cipher, verbose)
 	print("Candidates %s, cipher %s" % (candidates, cipher))
 	final = "No candidates"
 	for candidate in candidates:
