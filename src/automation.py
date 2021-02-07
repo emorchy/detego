@@ -14,7 +14,6 @@ colorama.init(autoreset=True)
 #TODO create a class about just passive statistics
 #TODO be able to list what it decodes
 #TODO fix unprintable characters
-#TODO fix rot key
 #TODO document my code
 
 def parse_command_line():
@@ -27,7 +26,6 @@ def parse_command_line():
 	parser.add_argument("-d", "--dictionary", help="Program will know it has successfully decoded if output contains English words")
 	parser.add_argument("-n", "--number", help="The number of English words before the program is flagged as correct", const=3, type=int, nargs='?', default=3)
 	parser.add_argument("-i", "--iteration", help="The number of iterations the program will do", const=3, type=int, nargs='?', default=1)
-	parser.add_argument("-r", "--rot", help="Run all ROT's (1-25) instead of just ROT13", action="store_true")
 	parser.add_argument("-u", "--userdefined", help="User defines what to decode (type '--listuser' to list arguments)", type=str, nargs='?')
 	parser.add_argument("--listuser", help="Lists user defined arguments", action="store_true")
 	return parser
@@ -74,17 +72,17 @@ class Decode:
 	def base64(self):
 		bases = base64.b64decode(self)
 		return Decode.decode(bases)
-	def rot(self, rot_min, rot_max):
+	def rot(self):
 		LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 		letters = 'abcdefghijklmnopqrstuvwxyz'
-		numbers = '0123456789'
+		#numbers = '0123456789'
 		translated = []
-		for i in range(rot_min, rot_max):
+		for i in range(1,25):
 			char = []
 			for symbol in self:
 				if symbol.isupper(): charset = LETTERS	 # defines which charset to shift
 				elif symbol.islower(): charset = letters 
-				elif symbol.isdigit(): charset = numbers 
+				#elif symbol.isdigit(): charset = numbers 
 				else:
 					char.append(symbol) # char will not be shifted if it doesn't belong to any charset
 					continue
@@ -130,7 +128,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
 	def regex(encoder): #establishes what each possible encoded ciphertext looks like using regex
 		base64 = re.compile(r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 		binary = re.compile(r"^[01\W_]+$")
-		rot = re.compile(r"^[A-Za-z0-9\W]+$")
+		rot = re.compile(r"^[A-Za-z]+[0-9\W]*$")
 		hexadecimal = re.compile(r"^[0]?[xX]?[A-Fa-f0-9 ]+$")
 		morse = re.compile(r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$")
 		return eval(encoder)
@@ -143,8 +141,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
 					info("Ciphertext may be {}".format(encoder))
 				try:
 					if encoder == "rot": # temporary solution
-						global rot_min, rot_max
-						decoded = Decode.rot(cipher, rot_min, rot_max) #pass along the ciphertext and the encoding type to the decoder
+						decoded = Decode.rot(cipher) #pass along the ciphertext and the encoding type to the decoder
 						if verbose >= 1:
 							for i in range(len(decoded)):
 								answer(encoder + str(i+1), decoded[i])
@@ -214,12 +211,6 @@ if __name__ == '__main__':
 		Example: '6b' decodes base64 and decodes binary
 		''')
 		exit(0)
-
-	rot_min = 13
-	rot_max = 14
-	if args.rot:
-		rot_min = 1
-		rot_max = 26
 
 	if args.userdefined != None:
 		defined = list(args.userdefined)
