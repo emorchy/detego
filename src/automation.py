@@ -16,8 +16,8 @@ def parse_command_line():
 	group.add_argument("ciphertext", help="ciphertext here", nargs='?')
 	group.add_argument("-f", "--file", help="Option cipherfile in place of ciphertext", nargs='?')
 	parser.add_argument("-v", "--verbose", help="Increase output verbosity (incremental)", action='count', default=0)
-	parser.add_argument("-s", "--search", help="Program will know it has successfully decoded if output contains user defined string")
-	parser.add_argument("-d", "--dictionary", help="Program will know it has successfully decoded if output contains English words")
+	parser.add_argument("-s", "--string", help="Program will stop if it finds user defined string")
+	parser.add_argument("-d", "--dictionary", help="Program will stop if it contains words in dictionary")
 	parser.add_argument("-n", "--number", help="The number of English words before the program is flagged as correct", const=3, type=int, nargs='?', default=3)
 	parser.add_argument("-i", "--iteration", help="The number of iterations the program will do", const=3, type=int, nargs='?', default=1)
 	parser.add_argument("-u", "--userdefined", help="User defines what to decode (type '--listuser' to list arguments)", type=str, nargs='?')
@@ -122,7 +122,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
 	def regex(encoder): #establishes what each possible encoded ciphertext looks like using regex
 		base64 = re.compile(r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 		binary = re.compile(r"^[01\W_]+$")
-		rot = re.compile(r"^[A-Za-z0-9\W]+$")
+		rot = re.compile(r"^[A-Za-z]+[0-9\W]*$")
 		hexadecimal = re.compile(r"^[0]?[xX]?[A-Fa-f0-9 ]+$")
 		morse = re.compile(r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$")
 		return eval(encoder)
@@ -189,12 +189,11 @@ if __name__ == '__main__':
 		with open(args.file, 'r') as file:
 			cipher = []
 			cipher.append(file.read().replace('\n', ''))
+	dictionary = args.dictionary
 	if args.dictionary != None:
 		with open(args.dictionary, 'r') as file:
 			dictionary = file.read()
 			dictionary = dictionary.split('\n')
-	if args.search != None:
-		search = args.search
 	if args.listuser:
 		print('''
 		base64	=   6
@@ -205,6 +204,7 @@ if __name__ == '__main__':
 		Example: '6b' decodes base64 and decodes binary
 		''')
 		exit(0)
+	string = args.string
 
 	if args.userdefined != None:
 		defined = list(args.userdefined)
@@ -240,10 +240,10 @@ if __name__ == '__main__':
 		print("Iteration %d:" % i)
 		for j in range(len(cipher)):
 			candidates = Identify.main(cipher[j], verbose)
+			if verbose == 1:
 			print("Candidates %s, cipher %s" % (candidates, cipher))
 			for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
 				if Check(candidates[k], string, dictionary, num):
 					print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % candidates[k])
 					exit(0)
 		cipher = candidates
-
