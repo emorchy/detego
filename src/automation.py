@@ -232,16 +232,16 @@ if __name__ == '__main__':
 	iteration = args.iteration
 	verbose = args.verbose
 
-        if dictionary == None and string == None and verbose == 0:
-                print("Increasing verbosity because no checks defined")
-                verbose = 1
+	if dictionary == None and string == None and verbose == 0:
+		print("Increasing verbosity because no checks defined")
+		verbose = 1
 
 	for i in range(1, 1 + iteration):
 		print("Iteration %d:" % i)
 		for j in range(len(cipher)):
 			candidates = Identify.main(cipher[j], verbose)
 			if verbose == 1:
-			print("Candidates %s, cipher %s" % (candidates, cipher))
+				print("Candidates %s, cipher %s" % (candidates, cipher))
 			for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
 				if Check(candidates[k], string, dictionary, num):
 					print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % candidates[k])
