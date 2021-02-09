@@ -5,7 +5,7 @@ import matplotlib
 import re
 import codecs
 import base64
-from tqdm import tqdm 
+from tqdm import tqdm
 import colorama
 from colorama import Fore, Back, Style
 colorama.init(autoreset=True)
@@ -24,22 +24,22 @@ def parse_command_line():
 	parser.add_argument("--listuser", help="Lists user defined arguments", action="store_true")
 	return parser
 
-MORSE_CODE_DICT = { 'A':'.-', 'B':'-...', 
-		    'C':'-.-.', 'D':'-..', 'E':'.', 
-		    'F':'..-.', 'G':'--.', 'H':'....', 
-		    'I':'..', 'J':'.---', 'K':'-.-', 
-		    'L':'.-..', 'M':'--', 'N':'-.', 
-		    'O':'---', 'P':'.--.', 'Q':'--.-', 
-		    'R':'.-.', 'S':'...', 'T':'-', 
-		    'U':'..-', 'V':'...-', 'W':'.--', 
-		    'X':'-..-', 'Y':'-.--', 'Z':'--..', 
-		    '1':'.----', '2':'..---', '3':'...--', 
-		    '4':'....-', '5':'.....', '6':'-....', 
-		    '7':'--...', '8':'---..', '9':'----.', 
-		    '0':'-----', ', ':'--..--', '.':'.-.-.-', 
-		    '?':'..--..', '!':'-.-.--', '/':'-..-.', 
-		    '-':'-....-', '(':'-.--.', ')':'-.--.-',
-		    '=':'-...-'}
+MORSE_CODE_DICT = {	'A':'.-', 'B':'-...',
+			'C':'-.-.', 'D':'-..', 'E':'.',
+			'F':'..-.', 'G':'--.', 'H':'....',
+			'I':'..', 'J':'.---', 'K':'-.-',
+		 	'L':'.-..', 'M':'--', 'N':'-.',
+			'O':'---', 'P':'.--.', 'Q':'--.-',
+			'R':'.-.', 'S':'...', 'T':'-',
+			'U':'..-', 'V':'...-', 'W':'.--',
+			'X':'-..-', 'Y':'-.--', 'Z':'--..',
+			'1':'.----', '2':'..---', '3':'...--',
+			'4':'....-', '5':'.....', '6':'-....',
+			'7':'--...', '8':'---..', '9':'----.',
+			'0':'-----', ', ':'--..--', '.':'.-.-.-',
+			'?':'..--..', '!':'-.-.--', '/':'-..-.',
+			'-':'-....-', '(':'-.--.', ')':'-.--.-',
+			'=':'-...-'}
 
 def answer(a, b):
 	print(Fore.GREEN + "{} decode: ".format(a) + Style.BRIGHT + "{}".format(b))
@@ -52,8 +52,7 @@ class Decode:
 			plaintext = self.decode('utf-8')
 			return plaintext
 		except:
-			plaintext = "ϴ"
-			return plaintext
+			return ''
 	def binary(self):
 		clean = re.sub(r'[\W_]', '', self) # gets rid of delimiters
 		split = [clean[i:i+8] for i in range(0, len(clean), 8)]	# splits string into groups of 8
@@ -75,8 +74,8 @@ class Decode:
 			char = []
 			for symbol in self:
 				if symbol.isupper(): charset = LETTERS	 # defines which charset to shift
-				elif symbol.islower(): charset = letters 
-				#elif symbol.isdigit(): charset = numbers 
+				elif symbol.islower(): charset = letters
+				#elif symbol.isdigit(): charset = numbers
 				else:
 					char.append(symbol) # char will not be shifted if it doesn't belong to any charset
 					continue
@@ -86,16 +85,14 @@ class Decode:
 			translated.append("".join(char)) # combine char list into one string
 		return translated # return every string from every rot iterated
 	def hexadecimal(self):
-		chars = []
-		if ' ' in self:
-			for i in self.split(" "):
-				translated = bytearray.fromhex(i).decode()
-		if '0x' in self:
-			for i in self.split("0x"):
-				translated = bytearray.fromhex(i).decode()
-		else:
-			translated = bytearray.fromhex(self).decode()
-		return translated
+		try:
+			charlist = re.findall('[0-9A-Fa-f]{2}',self)
+			chars = ''.join(charlist)
+			translated = bytearray.fromhex(chars).decode()
+			return translated
+		except:
+			return None
+
 	def morse(self):
 		code = self.strip()
 		decipher, pending = '','' # declare two empty string variables
@@ -122,8 +119,8 @@ class Identify: #class that automates identification of ciphertext (faster than 
 	def regex(encoder): #establishes what each possible encoded ciphertext looks like using regex
 		base64 = re.compile(r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 		binary = re.compile(r"^[01\W_]+$")
-		rot = re.compile(r"^[A-Za-z]+[0-9\W]*$")
-		hexadecimal = re.compile(r"^[0]?[xX]?[A-Fa-f0-9 ]+$")
+		rot = re.compile(r"^([A-Za-z]+[0-9\W]*)+$")
+		hexadecimal = re.compile(r"^.*[A-Fa-f0-9]{2}.*$")
 		morse = re.compile(r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$")
 		return eval(encoder)
 	def main(cipher, verbose):
@@ -142,10 +139,15 @@ class Identify: #class that automates identification of ciphertext (faster than 
 						candidates.extend(decoded)
 					else:
 						decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
-						answer(encoder, decoded)
-						candidates.append(decoded) #add the possible plaintext to the candidate list
+						if decoded: # if the program returns actual code
+							if verbose >= 1:
+								answer(encoder, decoded)
+							candidates.append(decoded) #add the possible plaintext to the candidate list
+						else:
+							raise Exception("Did not return a utf-8 printable value")
 				except Exception as e:
-					print("Could not decode using {}, Error: {}".format(encoder, e))
+					if verbose == 2:
+						info("Could not decode using {}, Error: {}".format(encoder, e))
 		return candidates #returns possible candidates of plaintext from decoding
 
 class Check:
@@ -167,28 +169,22 @@ class Check:
 		self.dictionary = dictionary
 		self.num = num
 	def __bool__(self):
-		try:
+		if self.string != None:
 			if self.check_string() == True:
 				return True
-		except:
-			pass
-		try:
+		if self.dictionary != None:
 			if self.check_dictionary() == True:
 				return True
-		except:	
-			pass
 		return False
-		
+
 
 if __name__ == '__main__':
 	args = parse_command_line().parse_args()
 	if args.ciphertext != None:
-		cipher = []
-		cipher.append(args.ciphertext)
+		cipher = [args.ciphertext]
 	if args.file != None:
 		with open(args.file, 'r') as file:
-			cipher = []
-			cipher.append(file.read().replace('\n', ''))
+			cipher = [file.read().replace('\n', '')]
 	dictionary = args.dictionary
 	if args.dictionary != None:
 		with open(args.dictionary, 'r') as file:
@@ -213,17 +209,17 @@ if __name__ == '__main__':
 			try:
 				if i == '6':
 					code = Decode.base64(code)
-					answer("Base64 decode (Ø means unprintable): ", code)
+					answer("Base64 decode: ", code)
 				elif i.lower() == 'm':
 					code = Decode.morse(code)
-					answer("Morse decode (Ø means unprintable): ", code)
+					answer("Morse decode: ", code)
 				elif i.lower() == 'b':
-					code = Decode.binary(code) 
-					answer("Binary decode (Ø means unprintable): ", code)
+					code = Decode.binary(code)
+					answer("Binary decode: ", code)
 				elif i.lower() == 'r':
 					for j in range(rot_min, rot_max):
 						code = Decode.rot(code, j).rstrip()
-						answer("Rot decode (Ø means unprintable): ", code)
+						answer("Rot decode: ", code)
 			except:
 				print("{} did not work".format(i))
 		exit(0)
@@ -232,18 +228,25 @@ if __name__ == '__main__':
 	iteration = args.iteration
 	verbose = args.verbose
 
-	if dictionary == None and string == None and verbose == 0:
-		print("Increasing verbosity because no checks defined")
-		verbose = 1
+	if dictionary == None and string == None:
+		check = 0
+		info("No checks will run")
+		if verbose == 0:
+			info("Increasing verbosity because no checks defined")
+			verbose = 1
+	else:
+		check = 1
 
 	for i in range(1, 1 + iteration):
-		print("Iteration %d:" % i)
+		if verbose == 1:
+			info("Iteration {}".format(i))
 		for j in range(len(cipher)):
 			candidates = Identify.main(cipher[j], verbose)
-			if verbose == 1:
+			if verbose == 2:
 				print("Candidates %s, cipher %s" % (candidates, cipher))
-			for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
-				if Check(candidates[k], string, dictionary, num):
-					print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % candidates[k])
-					exit(0)
+			if check == 1:
+				for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
+					if Check(candidates[k], string, dictionary, num):
+						print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % candidates[k])
+						exit(0)
 		cipher = candidates
