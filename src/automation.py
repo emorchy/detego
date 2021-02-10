@@ -25,7 +25,7 @@ MORSE_CODE_DICT = {	'A':'.-', 'B':'-...',
 			'C':'-.-.', 'D':'-..', 'E':'.',
 			'F':'..-.', 'G':'--.', 'H':'....',
 			'I':'..', 'J':'.---', 'K':'-.-',
-		 	'L':'.-..', 'M':'--', 'N':'-.',
+			'L':'.-..', 'M':'--', 'N':'-.',
 			'O':'---', 'P':'.--.', 'Q':'--.-',
 			'R':'.-.', 'S':'...', 'T':'-',
 			'U':'..-', 'V':'...-', 'W':'.--',
@@ -147,6 +147,30 @@ class Identify: #class that automates identification of ciphertext (faster than 
 						info("Could not decode using {}, Error: {}".format(encoder, e))
 		return candidates #returns possible candidates of plaintext from decoding
 
+class Define:
+	def __init__(self, defined, code):
+		"""Class and function decodes ciphertext using user defined character interpreted as an encoder."""
+		for encoder in defined:
+			try:
+				if encoder == '6':
+					code = Decode.base64(code)
+					answer("Base64", code)
+				elif encoder.lower() == 'm':
+					code = Decode.morse(code)
+					answer("Morse", code)
+				elif encoder.lower() == 'b':
+					code = Decode.binary(code)
+					answer("Binary", code)
+				elif encoder.lower() == 'h':
+					code = Decode.hexadecimal(code)
+					answer("Hexadecimal", code)
+				elif encoder.lower() == 'r':
+						code = Decode.rot(code)
+						for j, code in enumerate(code):
+							answer("rot{}".format(str(j+1)), code)
+			except Exception as e:
+				info("{} did not work, Error: {}".format(encoder, e))
+
 class Check:
 	def check_string(self):
 		if self.string.lower() in self.plaintext:
@@ -202,23 +226,7 @@ if __name__ == '__main__':
 	if args.userdefined != None:
 		defined = list(args.userdefined)
 		code = ciphers[0]
-		for i in defined:
-			try:
-				if i == '6':
-					code = Decode.base64(code)
-					answer("Base64 decode: ", code)
-				elif i.lower() == 'm':
-					code = Decode.morse(code)
-					answer("Morse decode: ", code)
-				elif i.lower() == 'b':
-					code = Decode.binary(code)
-					answer("Binary decode: ", code)
-				elif i.lower() == 'r':
-					for j in range(rot_min, rot_max):
-						code = Decode.rot(code, j).rstrip()
-						answer("Rot decode: ", code)
-			except:
-				print("{} did not work".format(i))
+		Define(defined, code)
 		exit(0)
 
 	num = args.number
