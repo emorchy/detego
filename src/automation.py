@@ -54,8 +54,8 @@ class Decode:
 		clean = re.sub(r'[\W_]', '', self) # gets rid of delimiters
 		split = [clean[i:i+8] for i in range(0, len(clean), 8)]	# splits string into groups of 8
 		byte_list = []
-		for i in range(len(split)): # convert each binary string to its corresponding byte
-			binary = bytes([int(split[i], base=2)]) # converts binary string to decimal to binary literal
+		for i in split: # convert each binary string to its corresponding byte
+			binary = bytes([int(i, base=2)]) # converts binary string to decimal to binary literal
 			plaintext = Decode.decode(binary)
 			byte_list.append(plaintext)
 		return ''.join(byte_list)
@@ -131,8 +131,8 @@ class Identify: #class that automates identification of ciphertext (faster than 
 					if encoder == "rot": # temporary solution
 						decoded = Decode.rot(cipher) #pass along the ciphertext and the encoding type to the decoder
 						if verbose >= 1:
-							for i in range(len(decoded)):
-								answer(encoder + str(i+1), decoded[i])
+							for i, code in enumerate(decoded):
+								answer(encoder + str(i+1), code)
 						candidates.extend(decoded)
 					else:
 						decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
@@ -178,10 +178,10 @@ class Check:
 if __name__ == '__main__':
 	args = parse_command_line().parse_args()
 	if args.ciphertext != None:
-		cipher = [args.ciphertext]
+		ciphers = [args.ciphertext]
 	if args.file != None:
 		with open(args.file, 'r') as file:
-			cipher = [file.read().replace('\n', '')]
+			ciphers = [file.read().replace('\n', '')]
 	dictionary = args.dictionary
 	if args.dictionary != None:
 		with open(args.dictionary, 'r') as file:
@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
 	if args.userdefined != None:
 		defined = list(args.userdefined)
-		code = cipher[0]
+		code = ciphers[0]
 		for i in defined:
 			try:
 				if i == '6':
@@ -237,13 +237,13 @@ if __name__ == '__main__':
 	for i in range(1, 1 + iteration):
 		if verbose == 1:
 			info("Iteration {}".format(i))
-		for j in range(len(cipher)):
-			candidates = Identify.main(cipher[j], verbose)
+		for cipher in ciphers:
+			candidates = Identify.main(cipher, verbose)
 			if verbose == 2:
-				print("Candidates %s, cipher %s" % (candidates, cipher))
+				print("Candidates %s, ciphers %s" % (candidates, ciphers))
 			if check == 1:
-				for k in tqdm (range (len(candidates)), desc="Checking for matches..."):
-					if Check(candidates[k], string, dictionary, num):
-						print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % candidates[k])
+				for k in tqdm(candidates, desc="Checking for matches..."):
+					if Check(k, string, dictionary, num):
+						print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % k)
 						exit(0)
-		cipher = candidates
+		ciphers = candidates
