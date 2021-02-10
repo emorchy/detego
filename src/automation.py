@@ -44,7 +44,7 @@ def info(a):
 	print(Fore.BLUE + a)
 
 class Decode:
-	def decode(self):
+	def bytedecode(self):
 		try:
 			plaintext = self.decode('utf-8')
 			return plaintext
@@ -56,12 +56,12 @@ class Decode:
 		byte_list = []
 		for i in split: # convert each binary string to its corresponding byte
 			binary = bytes([int(i, base=2)]) # converts binary string to decimal to binary literal
-			plaintext = Decode.decode(binary)
+			plaintext = Decode.bytedecode(binary)
 			byte_list.append(plaintext)
 		return ''.join(byte_list)
 	def base64(self):
 		bases = base64.b64decode(self)
-		return Decode.decode(bases)
+		return Decode.bytedecode(bases)
 	def rot(self):
 		LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 		letters = 'abcdefghijklmnopqrstuvwxyz'
