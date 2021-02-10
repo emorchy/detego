@@ -1,5 +1,4 @@
 import pytest
-import tqdm
 from src.automation import *
 
 #@pytest.fixture

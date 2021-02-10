@@ -1,12 +1,9 @@
 #!/bin/python3
 import argparse
-import math
-import matplotlib
 import re
-import codecs
 import base64
-from tqdm import tqdm
 import colorama
+from tqdm import tqdm
 from colorama import Fore, Back, Style
 colorama.init(autoreset=True)
 
