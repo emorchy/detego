@@ -1,0 +1,3 @@
+from .automation import *
+
+main()
