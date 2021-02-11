@@ -1,9 +1,9 @@
 # detego
 Program used during CTF's to auto identify and decode ciphers.
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d12645819b004168a286bf3eb52e4061)](https://app.codacy.com/gh/emorchy/automated-decoder?utm_source=github.com&utm_medium=referral&utm_content=emorchy/automated-decoder&utm_campaign=Badge_Grade)
-[![Build Status](https://travis-ci.com/emorchy/automated-decoder.svg?branch=main)](https://travis-ci.com/emorchy/automated-decoder)
-![GitHub last commit](https://img.shields.io/github/last-commit/emorchy/automated-decoder)
-[![Requirements Status](https://requires.io/github/emorchy/automated-decoder/requirements.svg?branch=main)](https://requires.io/github/emorchy/automated-decoder/requirements/?branch=main)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d12645819b004168a286bf3eb52e4061)](https://app.codacy.com/gh/emorchy/detego?utm_source=github.com&utm_medium=referral&utm_content=emorchy/detego&utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.com/emorchy/detego.svg?branch=main)](https://travis-ci.com/emorchy/detego)
+![GitHub last commit](https://img.shields.io/github/last-commit/emorchy/detego)
+[![Requirements Status](https://requires.io/github/emorchy/detego/requirements.svg?branch=main)](https://requires.io/github/emorchy/detego/requirements/?branch=main)
 
 ### Installation
 #### Using published package
