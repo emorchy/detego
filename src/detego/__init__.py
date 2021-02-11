@@ -1,3 +1,1 @@
 from .automation import *
-
-main()
