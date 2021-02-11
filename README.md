@@ -18,7 +18,7 @@ pip3 install -e .
 ### Running
 To see the arguments to run the program:
 ```
-python3 -m detego --help
+detego --help
 ```
 ### Encodings
 Currently, the project supports multiple encodings:
