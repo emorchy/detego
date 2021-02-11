@@ -21,4 +21,4 @@ script:
   - pytest --cov-report=xml --cov=src tests/
   - bash <(curl -s https://codecov.io/bash)
   - pip3 install -e .
-  - python3 -m automation --help || python -m automation --help
+  - python3 -m detego --help || python -m detego --help

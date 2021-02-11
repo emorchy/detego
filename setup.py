@@ -1,9 +1,3 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
-setup(name="automation",
-      version='0.1.0',
-      description='Automate the identification and decoding of various ciphers',
-      author='Ethan Morchy',
-      author_email='emorchy@gmail.com',
-      packages=find_packages(),
-      python_requires='>=3.6')
+setup()

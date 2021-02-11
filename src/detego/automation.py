@@ -9,7 +9,7 @@ colorama.init(autoreset=True)
 
 
 def parse_command_line():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='detego')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("ciphertext", help="ciphertext here", nargs='?')
     group.add_argument("-f", "--file", help="Option cipherfile in place of ciphertext", nargs='?')
@@ -199,8 +199,7 @@ class Check:
                 return True
         return False
 
-
-if __name__ == '__main__':
+def main():
     args = parse_command_line().parse_args()
     if args.ciphertext != None:
         ciphers = [args.ciphertext]
