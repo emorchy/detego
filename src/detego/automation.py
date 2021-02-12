@@ -114,29 +114,27 @@ class Manipulate:
         return self[::-1]
 
 class Identify: #class that automates identification of ciphertext (faster than brute forcing)
-    def regex(encoder): #establishes what each possible encoded ciphertext looks like using regex
-        base64 = re.compile(r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
-        binary = re.compile(r"^[01\W_]+$")
-        rot = re.compile(r"^([A-Za-z]+[0-9\W]*)+$")
-        hexadecimal = re.compile(r"^.*[A-Fa-f0-9]{2}.*$")
-        morse = re.compile(r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$")
-        return eval(encoder)
     def main(cipher, verbose):
-        encodings = ["base64", "binary", "rot", "hexadecimal", "morse"] #lists each function name (REDO IN TODO)
+        encodings = (
+                        ("base64", r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"),
+                        ("binary", r"^([01]+[\W_]?)+$"),
+                        ("rot", r"^([A-Za-z]+[0-9\W]*)+$"),
+                        ("hexadecimal", r"^.*[A-Fa-f0-9]{2}.*$"),
+                        ("morse", r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$"),
+                    )
         candidates = [] #prepares candidates for multiple iterations
-        for encoder in encodings: #for each string found in the encoding list
-            if Identify.regex(encoder).match(cipher): #if the regex of the encoder matches the ciphertext
-                if verbose == 2:
+        for encoder, regex in encodings: #for each string found in the encoding list
+            if re.compile(regex).match(cipher): #if the regex of the encoder matches the ciphertext
+                if verbose >= 2:
                     info("Ciphertext may be {}".format(encoder))
                 try:
+                    decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
                     if encoder == "rot": # temporary solution
-                        decoded = Decode.rot(cipher) #pass along the ciphertext and the encoding type to the decoder
                         if verbose >= 1:
                             for i, code in enumerate(decoded):
                                 answer(encoder + str(i+1), code)
                         candidates.extend(decoded)
                     else:
-                        decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
                         if decoded: # if the program returns actual code
                             if verbose >= 1:
                                 answer(encoder, decoded)
@@ -242,16 +240,21 @@ def main():
     else:
         check = 1
 
-    for i in range(1, 1 + iteration):
+# if one cipher returns two candidates, the next iteration will check two ciphers. If they both return two candidates, the pattern is 1,2,4,8,16
+    for i in range(1, 1 + iteration): # for every iteration
+        candidates = [] # declare/reset candidates variable
         if verbose == 1:
             info("Iteration {}".format(i))
-        for cipher in ciphers:
-            candidates = Identify.main(cipher, verbose)
-            if verbose == 2:
+        for cipher in ciphers: # for every cipher in ciphers list
+            candidates += Identify.main(cipher, verbose) # find potential candidates
+            if verbose == 3:
                 print("Candidates %s, ciphers %s" % (candidates, ciphers))
             if check == 1:
                 for k in tqdm(candidates, desc="Checking for matches..."):
                     if Check(k, string, dictionary, num):
                         print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % k)
                         exit(0)
-        ciphers = candidates
+        ciphers = candidates # ciphers become old candidates
+        if not candidates:
+            print(Fore.RED + Style.BRIGHT + "\nNot Found!\n")
+            exit(1)
