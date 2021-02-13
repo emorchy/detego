@@ -22,22 +22,23 @@ def parse_command_line():
     parser.add_argument("--listuser", help="Lists user defined arguments", action="store_true")
     return parser
 
-MORSE_CODE_DICT = { 'A':'.-', 'B':'-...',
-                    'C':'-.-.', 'D':'-..', 'E':'.',
-                    'F':'..-.', 'G':'--.', 'H':'....',
-                    'I':'..', 'J':'.---', 'K':'-.-',
-                    'L':'.-..', 'M':'--', 'N':'-.',
-                    'O':'---', 'P':'.--.', 'Q':'--.-',
-                    'R':'.-.', 'S':'...', 'T':'-',
-                    'U':'..-', 'V':'...-', 'W':'.--',
-                    'X':'-..-', 'Y':'-.--', 'Z':'--..',
-                    '1':'.----', '2':'..---', '3':'...--',
-                    '4':'....-', '5':'.....', '6':'-....',
-                    '7':'--...', '8':'---..', '9':'----.',
-                    '0':'-----', ', ':'--..--', '.':'.-.-.-',
-                    '?':'..--..', '!':'-.-.--', '/':'-..-.',
-                    '-':'-....-', '(':'-.--.', ')':'-.--.-',
-                    '=':'-...-'}
+MORSE_DICT = (
+    ('A', '.-'), ('B', '-...'), ('C', '-.-.'), ('D', '-..'),
+    ('E', '.'), ('F', '..-.'), ('G', '--.'), ('H', '....'),
+    ('I', '..'), ('J', '.---'), ('K', '-.-'), ('L', '.-..'),
+    ('M', '--'), ('N', '-.'), ('O', '---'), ('P', '.--.'),
+    ('Q', '--.-'), ('R', '.-.'), ('S', '...'), ('T', '-'),
+    ('U', '..-'), ('V', '...-'), ('W', '.--'), ('X', '-..-'),
+    ('Y', '-.--'), ('Z', '--..'), ('0', '-----'), ('1', '.----'),
+    ('2', '..---'), ('3', '...--'), ('4', '....-'), ('5', '.....'),
+    ('6', '-....'), ('7', '--...'), ('8', '---..'), ('9', '----.'),
+    (',', '--..--'), ('.', '.-.-.-'), ('?', '..--..'), (';', '-.-.-.'),
+    (':', '---...'), ("'", '.----.'), ('-', '-....-'), ('/', '-..-.'),
+    ('(', '-.--.-'), (')', '-.--.-'), ('_', '..--.-'), ('!', '-.-.--'),
+    ('Ä', '.-.-'), ('À', '.--.-'), ('Ö', '---.'), ('CH', '----'),
+    ('Ü', '..--'), ('È', '.-..-'), ('Ŝ', '...-.'), ('Þ', '.--..'),
+    ('É', '..-..')
+)
 
 def answer(a, b):
     print(Fore.GREEN + "{} decode: ".format(a) + Style.BRIGHT + "{}".format(b))
@@ -93,21 +94,15 @@ class Decode:
 
     def morse(self):
         code = self.strip()
-        decipher, pending = '','' # declare two empty string variables
-        space = re.compile(r"[ \t]") # tab or space
-        word = re.compile(r"[/\\]") # forward of backward slash
-        for ditdah in code:
-            if space.match(ditdah):
-                decipher += list(MORSE_CODE_DICT.keys())[list(MORSE_CODE_DICT.values()).index(pending)] # decode in pending string
-                pending = '' # reset pending string
-            elif word.match(ditdah):
-                decipher += list(MORSE_CODE_DICT.keys())[list(MORSE_CODE_DICT.values()).index(pending)]
-                pending = ''
-                decipher += ' ' # because / or \ represents a new word, so adds space
-            else:
-                pending += ditdah # add '.' or '_' to pending string, decoded and added to decipher after delimiter
-        decipher += list(MORSE_CODE_DICT.keys())[list(MORSE_CODE_DICT.values()).index(pending)] # required because code ends without delimiter
-        return decipher
+        text = []
+        for morse_word in re.split(r"[/\\]", code): # splits into words on slash
+            word = []
+            for morse_char in re.split(r"[ ]", morse_word): # splits into letters on space
+                for plain, char in MORSE_DICT:
+                    if char == morse_char:
+                        word.append(plain)
+            text.append(''.join(word))
+        return ' '.join(text)
 
 class Manipulate:
     def reverse(self):
