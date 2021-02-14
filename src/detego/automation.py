@@ -53,7 +53,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
                                 answer(encoder + str(i+1), code)
                         candidates.extend(decoded)
                     else:
-                        if decoded: # if the program returns actual code
+                        if decoded != None: # if the program is utf-8
                             if verbose >= 1:
                                 answer(encoder, decoded)
                             candidates.append(decoded) #add the possible plaintext to the candidate list

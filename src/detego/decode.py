@@ -22,12 +22,12 @@ MORSE_DICT = (
 
 class Decode:
 
-    def bytedecode(self):
+    def utf8(self): # attempt to decode binary, else return None
         try:
             plaintext = self.decode('utf-8')
             return plaintext
         except:
-            return ''
+            return None
 
     def binary(self):
         clean = re.sub(r'[\W_]', '', self) # gets rid of delimiters
@@ -35,13 +35,13 @@ class Decode:
         byte_list = []
         for i in split: # convert each binary string to its corresponding byte
             binary = bytes([int(i, base=2)]) # converts binary string to decimal to binary literal
-            plaintext = Decode.bytedecode(binary)
+            plaintext = Decode.utf8(binary)
             byte_list.append(plaintext)
         return ''.join(byte_list)
 
     def base64(self):
         bases = base64.b64decode(self)
-        return Decode.bytedecode(bases)
+        return Decode.utf8(bases)
 
     def rot(self):
         LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
