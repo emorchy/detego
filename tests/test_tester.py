@@ -1,5 +1,5 @@
 import pytest
-from src.detego.automation import *
+from src.detego.automation import Identify, Check
 
 #@pytest.fixture
 def dic_file():

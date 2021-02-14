@@ -1,1 +1,1 @@
-from .automation import *
+from .automation import main
