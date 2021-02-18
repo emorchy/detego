@@ -26,7 +26,7 @@ class Decode:
         try:
             plaintext = self.decode('utf-8')
             return plaintext
-        except:
+        except ValueError:
             return None
 
     def binary(self):
