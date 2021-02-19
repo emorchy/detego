@@ -69,7 +69,7 @@ class Decode:
             chars = ''.join(charlist)
             translated = bytearray.fromhex(chars).decode()
             return translated
-        except:
+        except ValueError:
             return None
 
     def morse(self):
