@@ -14,7 +14,7 @@ def parse_command_line():
     group.add_argument("ciphertext", help="ciphertext here", nargs='?')
     group.add_argument("-f", "--file", help="Option cipherfile in place of ciphertext", nargs='?')
     parser.add_argument("-v", "--verbose", help="Increase output verbosity (incremental)", action='count', default=0)
-    parser.add_argument("-s", "--string", help="Program will stop if it finds user defined string")
+    parser.add_argument("-s", "--search", help="Program will stop if it finds user defined string")
     parser.add_argument("-d", "--dictionary", help="Program will stop if it contains words in dictionary")
     parser.add_argument("-n", "--number", help="The number of English words before the program is flagged as correct", const=3, type=int, nargs='?', default=3)
     parser.add_argument("-i", "--iteration", help="The number of iterations the program will do", const=3, type=int, nargs='?', default=1)
@@ -38,7 +38,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
                         ("binary", r"^([01]+[\W_]?)+$"),
                         ("rot", r"^([A-Za-z]+[0-9\W]*)+$"),
                         ("hexadecimal", r"^.*[A-Fa-f0-9]{2}.*$"),
-                        ("morse", r"^[\s]*[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*(?:[ \t/\\]+[.-]{1,5}(?:[ \t/\\]+[.-]{1,5})*)*[\s]*$"),
+                        ("morse", r"^[\s]*[.-]{1,6}(?:[ \t\/\\]+[.-]{1,6})*(?:[ \t\/\\]+[.-]{1,6}(?:[ \t\/\\]+[.-]{1,6})*)*[\s]*$"),
                     )
         candidates = [] #prepares candidates for multiple iterations
         for encoder, regex in encodings: #for each string found in the encoding list
@@ -64,29 +64,31 @@ class Identify: #class that automates identification of ciphertext (faster than 
                         info("Could not decode using {}, Error: {}".format(encoder, e))
         return candidates #returns possible candidates of plaintext from decoding
 
-class Define:
-    def __init__(self, defined, code):
-        """Class and function decodes ciphertext using user defined character interpreted as an encoder."""
-        for encoder in defined:
-            try:
-                if encoder == '6':
-                    code = Decode.base64(code)
-                    answer("Base64", code)
-                elif encoder.lower() == 'm':
-                    code = Decode.morse(code)
-                    answer("Morse", code)
-                elif encoder.lower() == 'b':
-                    code = Decode.binary(code)
-                    answer("Binary", code)
-                elif encoder.lower() == 'h':
-                    code = Decode.hexadecimal(code)
-                    answer("Hexadecimal", code)
-                elif encoder.lower() == 'r':
-                        code = Decode.rot(code)
-                        for j, code in enumerate(code):
-                            answer("rot{}".format(str(j+1)), code)
-            except Exception as e:
-                info("{} did not work, Error: {}".format(encoder, e))
+def define(defined, code):
+    """Class and function decodes ciphertext using user defined character interpreted as an encoder."""
+    candidates = []
+    try:
+        if defined == '6':
+            decoded = Decode.base64(code)
+            candidates = [decoded]
+        elif defined.lower() == 'm':
+            decoded = Decode.morse(code)
+            candidates = [decoded]
+        elif defined.lower() == 'b':
+            decoded = Decode.binary(code)
+            candidates = [decoded]
+        elif defined.lower() == 'h':
+            decoded = Decode.hexadecimal(code)
+            candidates = [decoded]
+        elif defined.lower() == 'r':
+                decoded = Decode.rot(code)
+                candidates += decoded
+                for count, plain in enumerate(decoded):
+                    answer("rot{}".format(str(count+1)), plain)
+        answer(defined, decoded)
+    except Exception as e:
+        info("{} did not work, Error: {}".format(defined, e))
+    return candidates
 
 class Check:
     def check_string(self):
@@ -115,15 +117,15 @@ class Check:
                 return True
         return False
 
-def main():
+def parse_analyze():
     args = parse_command_line().parse_args()
-    if args.ciphertext != None:
+    dictionary = None
+    if args.ciphertext:
         ciphers = [args.ciphertext]
-    if args.file != None:
+    elif args.file:
         with open(args.file, 'r') as file:
             ciphers = [file.read().replace('\n', '')]
-    dictionary = args.dictionary
-    if args.dictionary != None:
+    if args.dictionary:
         with open(args.dictionary, 'r') as file:
             dictionary = file.read()
             dictionary = dictionary.split('\n')
@@ -137,19 +139,18 @@ def main():
         Example: '6b' decodes base64 and decodes binary
         ''')
         exit(0)
-    string = args.string
+    return ciphers, args.iteration, args.verbose, dictionary, args.search, args.number, args.userdefined
 
-    if args.userdefined != None:
-        defined = list(args.userdefined)
-        code = ciphers[0]
-        Define(defined, code)
+def main():
+    ciphers, iteration, verbose, dictionary, search, number, userdefined = parse_analyze()
+    if userdefined:
+        defined = list(userdefined)
+        candidates = [ciphers[0]]
+        for encoder in defined:
+                candidates = define(encoder, candidates[0])
         exit(0)
 
-    num = args.number
-    iteration = args.iteration
-    verbose = args.verbose
-
-    if dictionary == None and string == None:
+    if not dictionary and not search:
         check = 0
         info("No checks will run")
         if verbose == 0:
@@ -161,7 +162,7 @@ def main():
 # if one cipher returns two candidates, the next iteration will check two ciphers. If they both return two candidates, the pattern is 1,2,4,8,16
     for i in range(1, 1 + iteration): # for every iteration
         candidates = [] # declare/reset candidates variable
-        if verbose == 1:
+        if verbose >= 1:
             info("Iteration {}".format(i))
         for cipher in ciphers: # for every cipher in ciphers list
             candidates += Identify.main(cipher, verbose) # find potential candidates
@@ -169,7 +170,7 @@ def main():
                 print("Candidates %s, ciphers %s" % (candidates, ciphers))
             if check == 1:
                 for k in tqdm(candidates, desc="Checking for matches..."):
-                    if Check(k, string, dictionary, num):
+                    if Check(k, search, dictionary, number):
                         print(Fore.RED + Style.BRIGHT + "\nFinal: %s\n" % k)
                         exit(0)
         ciphers = candidates # ciphers become old candidates
