@@ -66,28 +66,34 @@ class Identify: #class that automates identification of ciphertext (faster than 
 
 def define(defined, code):
     """Class and function decodes ciphertext using user defined character interpreted as an encoder."""
-    candidates = []
-    try:
-        if defined == '6':
-            decoded = Decode.base64(code)
-            candidates = [decoded]
-        elif defined.lower() == 'm':
-            decoded = Decode.morse(code)
-            candidates = [decoded]
-        elif defined.lower() == 'b':
-            decoded = Decode.binary(code)
-            candidates = [decoded]
-        elif defined.lower() == 'h':
-            decoded = Decode.hexadecimal(code)
-            candidates = [decoded]
-        elif defined.lower() == 'r':
-                decoded = Decode.rot(code)
-                candidates += decoded
-                for count, plain in enumerate(decoded):
-                    answer("rot{}".format(str(count+1)), plain)
-        answer(defined, decoded)
-    except Exception as e:
-        info("{} did not work, Error: {}".format(defined, e))
+    decode = list(defined)
+    candidates = [code]
+    decoded = []
+    for encoder in decode:
+        try:
+            types = (
+                    ('base64', 'B'),
+                    ('morse', 'm'),
+                    ('binary', 'b'),
+                    ('hexadecimal', 'h'),
+                    ('rot', 'r'),
+                    )
+            for index, tup in enumerate(types):
+                if encoder in tup:
+                    temp = []
+                    for candidate in candidates:
+                        decoded = getattr(Decode, tup[0])(candidate)
+                        if decoded:
+                            if 'r' in tup:
+                                temp += decoded
+                                for count, plain in enumerate(decoded):
+                                    answer("rot{}".format(str(count+1)), plain)
+                            else:
+                                temp += [decoded]
+                                answer(encoder, decoded)
+                    candidates = temp
+        except Exception as e:
+            info("{} did not work, Error: {}".format(defined, e))
     return candidates
 
 class Check:
@@ -131,12 +137,12 @@ def parse_analyze():
             dictionary = dictionary.split('\n')
     if args.listuser:
         print('''
-        base64  =   6
+        base64  =   B
         morse   =   m
         binary  =   b
         rot     =   r
 
-        Example: '6b' decodes base64 and decodes binary
+        Example: 'Bb' decodes base64 and decodes binary
         ''')
         exit(0)
     return ciphers, args.iteration, args.verbose, dictionary, args.search, args.number, args.userdefined
@@ -144,10 +150,7 @@ def parse_analyze():
 def main():
     ciphers, iteration, verbose, dictionary, search, number, userdefined = parse_analyze()
     if userdefined:
-        defined = list(userdefined)
-        candidates = [ciphers[0]]
-        for encoder in defined:
-                candidates = define(encoder, candidates[0])
+        candidates = define(userdefined, ciphers[0])
         exit(0)
 
     if not dictionary and not search:
