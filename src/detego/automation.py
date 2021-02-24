@@ -71,6 +71,7 @@ def define(defined, code):
     candidates = [code]
     decoded = []
     for encoder in decode:
+        done = 0
         try:
             types = (
                     ('base64', 'B'),
@@ -80,7 +81,7 @@ def define(defined, code):
                     ('rot', 'r'),
                     ('vigenere', 'v'),
                     )
-            for index, tup in enumerate(types):
+            for tup in types:
                 if encoder in tup:
                     temp = []
                     for candidate in candidates:
@@ -94,8 +95,12 @@ def define(defined, code):
                                 temp += [decoded]
                                 answer(tup[0], decoded)
                     candidates = temp
+                    done = 1
         except Exception as e:
             info("{} did not work, Error: {}".format(defined, e))
+        if done == 0:
+            info("Incorrect type '{}'. Type --listuser for help.".format(encoder))
+            return
     return candidates
 
 class Check:
