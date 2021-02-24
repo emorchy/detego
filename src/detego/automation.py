@@ -48,20 +48,18 @@ class Identify: #class that automates identification of ciphertext (faster than 
                     info("Ciphertext may be {}".format(encoder))
                 try:
                     decoded = getattr(Decode, encoder)(cipher) #pass along the ciphertext and the encoding type to the decoder
-                    if encoder == "rot": # temporary solution
+                    if isinstance(decoded, list):
                         if verbose >= 1:
                             for i, code in enumerate(decoded):
                                 answer(encoder + str(i+1), code)
-                    else:
+                        candidates.extend(decoded) #add the possible plaintext to the candidate list
+                    elif isinstance(decoded, str):
                         if decoded != None: # if the program is utf-8
                             if verbose >= 1:
                                 answer(encoder, decoded)
+                            candidates.append(decoded)
                         else:
                             raise Exception("Did not return a utf-8 printable value")
-                    if type(decoded) == list:
-                        candidates.extend(decoded) #add the possible plaintext to the candidate list
-                    elif type(decoded) == str:
-                        candidates.append(decoded)
                 except Exception as e:
                     if verbose == 2:
                         info("Could not decode using {}, Error: {}".format(encoder, e))
@@ -88,13 +86,13 @@ def define(defined, code):
                     for candidate in candidates:
                         decoded = getattr(Decode, tup[0])(candidate)
                         if decoded:
-                            if 'r' in tup:
+                            if isinstance(decoded, list):
                                 temp += decoded
                                 for count, plain in enumerate(decoded):
-                                    answer("rot{}".format(str(count+1)), plain)
+                                    answer("{}{}".format(tup[0], str(count+1)), plain)
                             else:
                                 temp += [decoded]
-                                answer(encoder, decoded)
+                                answer(tup[0], decoded)
                     candidates = temp
         except Exception as e:
             info("{} did not work, Error: {}".format(defined, e))

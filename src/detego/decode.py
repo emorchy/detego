@@ -3,7 +3,6 @@ import re
 import base64
 import string
 import itertools
-from .vigenere import Vigenere
 
 MORSE_DICT = (
     ('A', '.-'), ('B', '-...'), ('C', '-.-.'), ('D', '-..'),
@@ -92,8 +91,8 @@ class Decode:
         for guess in itertools.product(string.ascii_lowercase, repeat=2):
             key = list(guess)
             orig_text = []
-            for i in range(len(self)):
-                x = (ord(self[i]) -ord(key[i % len(key)]) + 26) % 26
+            for count, char in enumerate(self):
+                x = (ord(char) -ord(key[count % len(key)]) + 26) % 26
                 x += ord('A')
                 orig_text.append(chr(x))
             code = "" . join(orig_text)
