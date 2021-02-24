@@ -39,6 +39,7 @@ class Identify: #class that automates identification of ciphertext (faster than 
                         ("rot", r"^([A-Za-z]+[0-9\W]*)+$"),
                         ("hexadecimal", r"^.*[A-Fa-f0-9]{2}.*$"),
                         ("morse", r"^[\s]*[.-]{1,6}(?:[ \t\/\\]+[.-]{1,6})*(?:[ \t\/\\]+[.-]{1,6}(?:[ \t\/\\]+[.-]{1,6})*)*[\s]*$"),
+                        ("vigenere", r"^[A-Za-z]+$"),
                     )
         candidates = [] #prepares candidates for multiple iterations
         for encoder, regex in encodings: #for each string found in the encoding list
@@ -51,14 +52,16 @@ class Identify: #class that automates identification of ciphertext (faster than 
                         if verbose >= 1:
                             for i, code in enumerate(decoded):
                                 answer(encoder + str(i+1), code)
-                        candidates.extend(decoded)
                     else:
                         if decoded != None: # if the program is utf-8
                             if verbose >= 1:
                                 answer(encoder, decoded)
-                            candidates.append(decoded) #add the possible plaintext to the candidate list
                         else:
                             raise Exception("Did not return a utf-8 printable value")
+                    if type(decoded) == list:
+                        candidates.extend(decoded) #add the possible plaintext to the candidate list
+                    elif type(decoded) == str:
+                        candidates.append(decoded)
                 except Exception as e:
                     if verbose == 2:
                         info("Could not decode using {}, Error: {}".format(encoder, e))
@@ -77,6 +80,7 @@ def define(defined, code):
                     ('binary', 'b'),
                     ('hexadecimal', 'h'),
                     ('rot', 'r'),
+                    ('vigenere', 'v'),
                     )
             for index, tup in enumerate(types):
                 if encoder in tup:
@@ -137,12 +141,13 @@ def parse_analyze():
             dictionary = dictionary.split('\n')
     if args.listuser:
         print('''
-        base64  =   B
-        morse   =   m
-        binary  =   b
-        rot     =   r
+        base64      =   B
+        morse       =   m
+        binary      =   b
+        rot         =   r
+        vigenere    =   v
 
-        Example: 'Bb' decodes base64 and decodes binary
+        Example: 'Br' decodes base64 and then brute forces a rot cipher
         ''')
         exit(0)
     return ciphers, args.iteration, args.verbose, dictionary, args.search, args.number, args.userdefined

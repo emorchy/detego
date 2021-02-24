@@ -1,6 +1,9 @@
 #!/bin/python3
 import re
 import base64
+import string
+import itertools
+from .vigenere import Vigenere
 
 MORSE_DICT = (
     ('A', '.-'), ('B', '-...'), ('C', '-.-.'), ('D', '-..'),
@@ -83,3 +86,17 @@ class Decode:
                         word.append(plain)
             text.append(''.join(word))
         return ' '.join(text)
+
+    def vigenere(self):
+        translated = []
+        for guess in itertools.product(string.ascii_lowercase, repeat=2):
+            key = list(guess)
+            orig_text = []
+            for i in range(len(self)):
+                x = (ord(self[i]) -ord(key[i % len(key)]) + 26) % 26
+                x += ord('A')
+                orig_text.append(chr(x))
+            code = "" . join(orig_text)
+            if code not in translated: # remove duplicates
+                translated.append(code)
+        return translated
